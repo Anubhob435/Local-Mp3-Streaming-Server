@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MP3 Streaming Server</title>
+    <style>
+        body {
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        audio {
+            width: 100%;
+            margin-top: 20px;
+            outline: none;
+        }
+    </style>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const socket = io();
+
+            const audio = document.querySelector('audio');
+            audio.src = '/stream';
+            audio.controls = true;
+
+            audio.addEventListener('play', () => {
+                socket.emit('control', { action: 'play' });
+            });
+
+            audio.addEventListener('pause', () => {
+                socket.emit('control', { action: 'pause' });
+            });
+
+            socket.on('control', (data) => {
+                if (data.action === 'play' && audio.paused) {
+                    audio.play();
+                } else if (data.action === 'pause' && !audio.paused) {
+                    audio.pause();
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>MP3 Streaming Server</h1>
+        <audio></audio>
+    </div>
+</body>
+</html>
