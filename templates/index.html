@@ -29,18 +29,41 @@
             margin-top: 20px;
             outline: none;
         }
+        select {
+            margin-top: 20px;
+            padding: 5px;
+            font-size: 16px;
+        }
     </style>
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const socket = io();
-
             const audio = document.querySelector('audio');
-            audio.src = '/stream';
-            audio.controls = true;
+            const mp3Select = document.querySelector('#mp3Select');
+
+            function loadMp3List() {
+                fetch('/mp3-list')
+                    .then(response => response.json())
+                    .then(mp3Files => {
+                        mp3Files.forEach(file => {
+                            const option = document.createElement('option');
+                            option.value = file;
+                            option.textContent = file;
+                            mp3Select.appendChild(option);
+                        });
+                    });
+            }
+
+            mp3Select.addEventListener('change', () => {
+                const selectedFile = mp3Select.value;
+                audio.src = `/stream/${selectedFile}`;
+                audio.play();
+                socket.emit('control', { action: 'play', file: selectedFile });
+            });
 
             audio.addEventListener('play', () => {
-                socket.emit('control', { action: 'play' });
+                socket.emit('control', { action: 'play', file: mp3Select.value });
             });
 
             audio.addEventListener('pause', () => {
@@ -48,19 +71,28 @@
             });
 
             socket.on('control', (data) => {
+                if (data.file && data.file !== mp3Select.value) {
+                    mp3Select.value = data.file;
+                    audio.src = `/stream/${data.file}`;
+                }
                 if (data.action === 'play' && audio.paused) {
                     audio.play();
                 } else if (data.action === 'pause' && !audio.paused) {
                     audio.pause();
                 }
             });
+
+            loadMp3List();
         });
     </script>
 </head>
 <body>
     <div class="container">
         <h1>MP3 Streaming Server</h1>
-        <audio></audio>
+        <audio controls></audio>
+        <select id="mp3Select">
+            <option value="" disabled selected>Select an MP3 file</option>
+        </select>
     </div>
 </body>
 </html>
