@@ -1,10 +1,20 @@
 ![Screenshot 2024-08-03 222232](https://github.com/user-attachments/assets/7ab7fe19-ff67-4e7d-bcdc-ab7269e67136)
 # Local-Mp3-Streaming-Server
+#### Video Demo:  <URL HERE>
+#### Description:
+Local-Mp3-Streaming-Server is a straightforward Python-Flask script designed to host MP3 files on your local Wi-Fi network. This setup allows multiple users connected to your network to stream music simultaneously.
 
-A Very simple python-flask script to host mp3 on your local wifi so that all your friends can connect to your network and listen simultaneously.
+To get started:
 
-just simply download the files and run the app.py
+1. **Install Flask**: Ensure you have Flask installed. You can install it via pip with the command `pip install flask`.
 
-place your mp3 in the folder and change the name in the py file
+2. **Download and Configure**:
+   - Download the project files.
+   - Place your MP3 files in the designated folder.
+   - Modify the filenames in the `app.py` script to match your MP3 files.
 
-after rinning go to the running ip address and everyone can tune in
+3. **Run the Server**:
+   - Execute the `app.py` script to start the server.
+   - Access the server by navigating to the provided IP address in your web browser.
+
+Once set up, your friends can connect to your network and listen to the music streamed from your laptop.
