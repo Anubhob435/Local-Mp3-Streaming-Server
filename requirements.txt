@@ -1,0 +1,6 @@
+flask
+flask-socketio
+google-api-python-client
+requests
+python-dotenv
+yt-dlp

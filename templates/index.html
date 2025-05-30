@@ -3,96 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MP3 Streaming Server</title>
-    <style>
-        body {
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-        .container {
-            text-align: center;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #333;
-        }
-        audio {
-            width: 100%;
-            margin-top: 20px;
-            outline: none;
-        }
-        select {
-            margin-top: 20px;
-            padding: 5px;
-            font-size: 16px;
-        }
-    </style>
-    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const socket = io();
-            const audio = document.querySelector('audio');
-            const mp3Select = document.querySelector('#mp3Select');
-
-            function loadMp3List() {
-                fetch('/mp3-list')
-                    .then(response => response.json())
-                    .then(mp3Files => {
-                        mp3Files.forEach(file => {
-                            const option = document.createElement('option');
-                            option.value = file;
-                            option.textContent = file;
-                            mp3Select.appendChild(option);
-                        });
-                    });
-            }
-
-            mp3Select.addEventListener('change', () => {
-                const selectedFile = mp3Select.value;
-                audio.src = `/stream/${selectedFile}`;
-                audio.play();
-                socket.emit('control', { action: 'play', file: selectedFile });
-            });
-
-            audio.addEventListener('play', () => {
-                socket.emit('control', { action: 'play', file: mp3Select.value });
-            });
-
-            audio.addEventListener('pause', () => {
-                socket.emit('control', { action: 'pause' });
-            });
-
-            socket.on('control', (data) => {
-                if (data.file && data.file !== mp3Select.value) {
-                    mp3Select.value = data.file;
-                    audio.src = `/stream/${data.file}`;
-                }
-                if (data.action === 'play' && audio.paused) {
-                    audio.play();
-                } else if (data.action === 'pause' && !audio.paused) {
-                    audio.pause();
-                }
-            });
-
-            loadMp3List();
-        });
-    </script>
+    <title>MusicStream - Modern Music Streaming</title>
+    <meta name="description" content="Stream music from YouTube and play local files with MusicStream">
+    <meta name="theme-color" content="#667eea">
+    
+    <!-- External Stylesheets -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://www.youtube.com">    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://www.youtube.com">
 </head>
 <body>
-    <div class="container">
-        <h1>MP3 Streaming Server</h1>
-        <audio controls></audio>
-        <select id="mp3Select">
-            <option value="" disabled selected>Select an MP3 file</option>
-        </select>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Search for music, artists, albums..." id="searchInput">
+                <button class="search-btn" id="searchBtn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-music"></i>
+                MusicStream
+            </div>
+            
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-title">Discover</div>
+                    <div class="nav-item active" data-section="home">
+                        <i class="fas fa-home"></i>
+                        Home
+                    </div>
+                    <div class="nav-item" data-section="search">
+                        <i class="fas fa-search"></i>
+                        Search
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-title">Library</div>
+                    <div class="nav-item" data-section="local">
+                        <i class="fas fa-folder-music"></i>
+                        Local Files
+                    </div>
+                    <div class="nav-item" data-section="playlists">
+                        <i class="fas fa-list"></i>
+                        Playlists
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">            <!-- Home Section -->
+            <section class="content-section active" id="home">
+                <h1 class="section-title">Welcome to MusicStream</h1>
+                <div class="section-subtitle">
+                    Discover and stream music from YouTube or play your local files
+                </div>
+                
+                <div class="empty-state">
+                    <i class="fas fa-music"></i>
+                    <h3>Start by searching for music</h3>
+                    <p>Use the search bar above to find your favorite songs on YouTube</p>
+                </div>
+            </section>
+
+            <!-- Search Results Section -->
+            <section class="content-section" id="search">
+                <h1 class="section-title">Search Results</h1>
+                <div id="searchResults"></div>
+            </section>
+
+            <!-- Local Files Section -->
+            <section class="content-section" id="local">
+                <h1 class="section-title">Local Files</h1>
+                <div class="local-files">
+                    <div id="localFiles"></div>
+                </div>
+            </section>
+
+            <!-- Playlists Section -->
+            <section class="content-section" id="playlists">
+                <h1 class="section-title">Playlists</h1>
+                <div id="playlistsContainer"></div>
+            </section>
+        </main>
+
+        <!-- Player Bar -->
+        <div class="player-bar">
+            <div class="now-playing">
+                <img class="now-playing-thumbnail" id="nowPlayingThumbnail" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Crect width='60' height='60' fill='%23f0f0f0'/%3E%3Ctext x='30' y='35' text-anchor='middle' fill='%23999' font-family='Arial' font-size='12'%3ENo Song%3C/text%3E%3C/svg%3E" alt="Now Playing">
+                <div class="now-playing-info">
+                    <h4 id="nowPlayingTitle">No song playing</h4>
+                    <p id="nowPlayingArtist">Select a song to start</p>
+                </div>
+            </div>
+
+            <div class="player-controls">
+                <div class="control-buttons">
+                    <button class="control-btn" id="shuffleBtn">
+                        <i class="fas fa-random"></i>
+                    </button>
+                    <button class="control-btn" id="prevBtn">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    <button class="control-btn play-btn" id="playPauseBtn">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <button class="control-btn" id="nextBtn">
+                        <i class="fas fa-step-forward"></i>
+                    </button>
+                    <button class="control-btn" id="repeatBtn">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+
+                <div class="progress-container">
+                    <span class="time-display" id="currentTime">0:00</span>
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <span class="time-display" id="totalTime">0:00</span>
+                </div>
+            </div>
+
+            <div class="volume-controls">
+                <button class="control-btn" id="muteBtn">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100">
+            </div>            <audio id="audioPlayer" preload="metadata"></audio>
+        </div>
     </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
